@@ -6,7 +6,9 @@ This is a trivial wss proxy to mine Nimiq dumb mode with TRM. You need
 it to mine Nimiq with TRM unless your pool has added support natively. Start the adapter on your local network or somewhere on the internet, point the miner to the listening port and you should be mining.
 
 Example:
+
  ``trm_nimiq_proxy.exe 4444 nimiq.icemining.ca 2053 1``
+ 
   ``teamredminer.exe -a nimiq -o stratum+tcp://localhost:4444 -u "NQ.. <rest of wallet>" -p x --nimiq_worker=testrig``
 
 TRM has also set up a public proxy available over internet connecting to nimiq.icemining.ca. It's not recommended to use it for anything but quick testing, it might be taken down later. It's available at ``18.196.209.223:4444`` and is used in our example start scripts. Naturally, you should NOT use it if you're nervous about TRM devs seeing your wallet address.
@@ -29,5 +31,7 @@ The proxy takes the following arguments:
  - Traffic log: 1 or 0. When enabled, all traffic will be logged to the proxy.log file.
 
 Example from source: ``node index.js 4444 nimiq.icemining.ca 2053 1``
+
 Win release: ``trm_nimiq_proxy-win.exe 4444 nimiq.icemining.ca 2053 1``
+
 Linux release: ``./trm_nimiq_proxy-linux 4444 nimiq.icemining.ca 2053 1``
