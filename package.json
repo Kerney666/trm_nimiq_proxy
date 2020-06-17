@@ -1,0 +1,23 @@
+{
+  "name": "trm_nimiq_proxy",
+  "version": "1.0.0",
+  "description": "Simple wss proxy to mine nimiq dumb mode with TRM.",
+  "main": "index.js",
+  "bin": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Kerney666",
+  "license": "MIT",
+  "dependencies": {
+    "ws": "^7.3.0",
+    "bufferutil": "^4.0.1",
+    "utf-8-validate": "^5.0.2",
+    "chalk": "^3.0.0",
+    "console-stamp": "^0.2.9",
+    "log-to-file": "^2.0.2",
+    "net": "^1.0.2",
+    "strip-ansi": "^6.0.0",
+    "util": "^0.12.1"
+  }
+}
