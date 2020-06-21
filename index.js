@@ -3,19 +3,77 @@ const util = require("util");
 const chalk = require('chalk');
 const stripAnsi = require('strip-ansi')
 const constamp = require('console-stamp')(console, '[yyyymmdd HH:MM:ss.l]');
-const logtofile = require('log-to-file');
-const socket = require('log-to-file');
 const WebSocket = require('ws');
+const fs = require('fs');
 
 var logfn = 'proxy.log';
-var started = false;
+var fileLogEnabled = false;
+
+// Duplicating the code from log-to-file, needed better error handling.
+
+/**
+ * Append zero to length.
+ * @param {string} value Value to append zero.
+ * @param {number} length Needed length.
+ * @returns {string} String with appended zeros id need it.
+ */
+function appendZeroToLength(value, length) {
+  return `${value}`.padStart(length, 0);
+}
+
+/**
+ * Get date as text.
+ * @returns {string} Date as text. Sample: "2018.12.03, 07:32:13.0162 UTC".
+ */
+function getDateAsText() {
+  const now = new Date();
+  const nowText = appendZeroToLength(now.getUTCFullYear(), 4) + '.'
+    + appendZeroToLength(now.getUTCMonth() + 1, 2) + '.'
+    + appendZeroToLength(now.getUTCDate(), 2) + ', '
+    + appendZeroToLength(now.getUTCHours(), 2) + ':'
+    + appendZeroToLength(now.getUTCMinutes(), 2) + ':'
+    + appendZeroToLength(now.getUTCSeconds(), 2) + '.'
+    + appendZeroToLength(now.getUTCMilliseconds(), 4) + ' UTC';
+  return nowText;
+}
+
+/**
+ * Log to file.
+ * @param {string} text Text to log.
+ * @param {string} [file] Log file path.
+ */
+function logToFile(text, file, errHandler) {
+    // Define file name.
+    const filename = file !== undefined ? file : 'default.log';
+    
+    // Define log text.
+    const logText = getDateAsText() + ' -> ' + text + '\r\n';
+    
+    // Save log to file.
+    fs.appendFile(filename, logText, 'utf8', function (error) {
+        if (!error) return;
+        if (errHandler) {
+            errHandler(error);
+        } else {
+            // If error - show in console.
+            console.log(getDateAsText() + ' -> ' + JSON.stringify(error, null, 2));
+        }
+    });
+}
 
 // Well, this is ugly crap, should use a proper logging framework.
 var realConLog = console.log;
 console.log = function(...args) {
     var s = util.format(...args);
     realConLog(s);
-    if (started) logtofile(stripAnsi(s), logfn);
+    if (fileLogEnabled) {
+        logToFile(stripAnsi(s), logfn, function(err) {
+            if (err && err.code && err.code == "EACCES") {
+                realConLog("Disabling logging to file, write failed.");
+                fileLogEnabled = false;
+            }
+        });
+    }
 };
 
 // Log uncaught exceptions
@@ -24,8 +82,10 @@ process.on("uncaughtException", function(error) {
 });
 
 // Check cmd line args
-if (process.argv.length != 6) {
-    console.log("Usage: trm_nimiq_proxy <localport> <wss pool host> <wss pool port> <log traffic: 1/0>");
+if (process.argv.length < 6 || process.argv.length > 7) {
+    console.log("Usage: trm_nimiq_proxy <localport> <wss pool host> <wss pool port> <log traffic: 1/0> (<file log: filename or 0 to disable>)");
+    console.log("Logging to console is always enabled. Logging to the file 'proxy.log' is default behavior.");
+    console.log("To log to another file, pass a filename as the last argument. To disable file logging, pass 0 instead.");
     process.exit();
 }
 
@@ -38,7 +98,11 @@ var connLog = true;
 var trafficLog = parseInt(process.argv[argIdx++]) != 0;
 
 // From here, log to file as well.
-started = true;
+fileLogEnabled = true;
+if (argIdx < process.argv.length) {
+    logfn = process.argv[argIdx++];
+    if (logfn == "0") fileLogEnabled = false;
+}
 
 // Global start time, we normally count from the first received share by resetting it at that point.
 var startMs;
