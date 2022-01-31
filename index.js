@@ -92,7 +92,7 @@ if (process.argv.length < 6 || process.argv.length > 7) {
 // Grab/parse cmd line args
 var argIdx = 2;
 var localport = process.argv[argIdx++];
-var poolHost = process.argv[argIdx++];
+var poolHostUrl = process.argv[argIdx++];
 var poolPort = parseInt(process.argv[argIdx++]);
 var connLog = true;
 var trafficLog = parseInt(process.argv[argIdx++]) != 0;
@@ -103,6 +103,17 @@ if (argIdx < process.argv.length) {
     logfn = process.argv[argIdx++];
     if (logfn == "0") fileLogEnabled = false;
 }
+
+// Split host name and uri part (if any).
+var poolUrl = "";
+var poolHost = poolHostUrl;
+var idx = poolHostUrl.indexOf('/');
+if (idx >= 0) {
+    poolHost = poolHostUrl.substring(0, idx); 
+    poolUrl = poolHostUrl.substring(idx);
+}
+
+console.log("Host '%s' url '%s'", poolHost, poolUrl);
 
 // Global start time, we normally count from the first received share by resetting it at that point.
 var startMs;
@@ -204,7 +215,7 @@ var server = net.createServer(function (localsocket) {
         conn.inSocket.end();
     };
     
-    conn.outSocket = new WebSocket(`wss://${poolHost}:${poolPort}`);
+    conn.outSocket = new WebSocket(`wss://${poolHost}:${poolPort}${poolUrl}`);
 
     conn.outSocket.on('open', () => {
         if (connLog) {
