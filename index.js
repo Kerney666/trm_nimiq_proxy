@@ -255,7 +255,7 @@ var server = net.createServer(function (localsocket) {
 				            conn.inSocket.remotePort);
             }
             conn.shutdown();
-        }, 30000);
+        }, 60000);
     };
     
     conn.outSocket.on('ping', conn.heartbeat);
